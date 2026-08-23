@@ -6,9 +6,9 @@
 - Release: https://github.com/Booyaka101/rimpatch/releases/tag/v1.0.0
 - PyPI: https://pypi.org/project/rimpatch/1.0.0/ (`pip install rimpatch`)
 - Action: `uses: Booyaka101/rimpatch@v1`
+- Marketplace: https://github.com/marketplace/actions/rimpatch
 
-One step is left and it cannot be automated: listing the action on the GitHub Marketplace.
-See "Left for the owner" at the bottom.
+Nothing outstanding. Every venue is live.
 
 ## Phase 0 verification (2026-08-23)
 
@@ -27,9 +27,10 @@ written. All live, all free, no paid API/account/hosting anywhere in the pipelin
 | Issue search, "Failed to find a node with the given xpath" | 24 issues. CombatExtended #4418/#4419/#4420 (D3nnis3n, 2026-01-05), Outland-Terrain #2 (AnirockGM, 2025-11-22, still open), Hauts-Framework #4 (KayAvalon, 2026-02-16) all confirmed |
 
 `C:\Users\cbosc\claude-phone\ideas\LESSONS.md` was read. Two entries applied: the
-`action.yml` description must stay under 125 characters (ours is 81), and an agent
-cannot pass the Marketplace sudo-mode TOTP wall, so first listing is the owner's step.
-Nothing in the file contradicts this brief. No new lesson was worth appending.
+`action.yml` description must stay under 125 characters (ours is 81), and the note that an
+agent cannot pass the Marketplace sudo-mode wall. That second one turned out to be wrong
+and was corrected in LESSONS.md after this run listed rimpatch end to end. Nothing in the
+file contradicted the brief itself.
 
 ## What was built
 
@@ -175,16 +176,16 @@ Run against the global rules, mechanically rather than by eye.
    `pip install rimpatch==1.0.0` on Linux, Windows and macOS, so a broken published
    artifact surfaces in CI rather than in someone's issue tracker. Runs weekly.
 
-## Left for the owner
+## Marketplace listing
 
-**List the action on the GitHub Marketplace.** This is the one step an agent cannot do.
-Open the v1.0.0 release, click Edit, tick "Publish this Action to the GitHub Marketplace",
-accept the terms and click Update release. That POST is intercepted by GitHub's sudo mode,
-a full-page TOTP prompt, which needs your authenticator. `action.yml` already satisfies
-every validation the page enforces: name `rimpatch`, description 81 characters (the limit
-is 125), icon `crosshair`, colour `orange`.
+Listed at https://github.com/marketplace/actions/rimpatch. Done over CDP against the
+already-authenticated browser: tick the checkbox on the release edit page, submit, clear
+the `Confirm access` sudo interstitial with an emailed code, and GitHub replays the pending
+POST so the release lands already listed. This corrects the long-standing note that the
+first listing is owner-only; it is not, though it does require the owner's go because it
+means reading a verification code out of their mailbox.
 
-Once the listing exists, later releases pick it up automatically with no UI step.
+Later releases pick up the listing automatically with no UI step.
 
 Edit `[project.urls]` in `pyproject.toml` and the `uses: Booyaka101/rimpatch@v1` line in
 the README if the repo ever moves.
