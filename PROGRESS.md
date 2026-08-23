@@ -28,10 +28,29 @@ Nothing in the file contradicts this brief. No new lesson was worth appending.
 ## What was built
 
 `src/rimpatch/` - `__init__` (version), `errors`, `xmlutil` (parsing, MayRequire gating,
-packageId normalisation), `discover` (About.xml, LoadFolders.xml, load order),
-`defs` (merged Def document), `operations` (all operation classes), `engine` (walk and
-collect), `diagnose` (deepest-matching-prefix), `report` (text/json/github), `cli`.
-Plus `action.yml`, `.github/workflows/ci.yml`, `tests/` and `tests/make_fixtures.py`.
+packageId normalisation), `locate` (finding the install and ModsConfig), `discover`
+(About.xml, LoadFolders.xml, load order), `defs` (merged Def document), `operations` (all
+operation classes), `engine` (walk and collect), `diagnose` (deepest-matching-prefix),
+`report` (text/json/github), `cli`. Plus `action.yml`, `.github/workflows/ci.yml`,
+`CHANGELOG.md`, `tests/` and `tests/make_fixtures.py`.
+
+## Usable by anyone, not just by someone holding the manual
+
+- **Zero-argument use.** `cd MyMod && rimpatch check` works: the current folder becomes
+  the mod, and the RimWorld install is found automatically.
+- **Install detection on all three platforms.** Steam's `libraryfolders.vdf` is parsed so
+  a game on a second drive is found (this machine's is on `D:`, not under Program Files),
+  plus the Windows registry, GOG and manual paths, macOS app bundles and Linux/flatpak
+  and Proton prefixes. `RIMWORLD_DIR` overrides it.
+- **`--mods-config auto`** finds the player's real active list and load order.
+- **`rimpatch where`** prints what was found, and when nothing is, every path it tried
+  plus the environment variable to set. That is the answer to "it can't find my game".
+- **A guard against the one mistake that produces nonsense**: if no vanilla defs loaded
+  and operations are missing, the summary says so and names `--game`.
+- **`RIMPATCH_NO_AUTODETECT=1`** makes a run independent of what is installed. The test
+  suite sets it via an autouse fixture, and the action and CI workflow set it, so results
+  are reproducible. This was found the hard way: adding detection made six tests fail
+  because they silently picked up the real install.
 
 ## Verified working
 
@@ -49,13 +68,16 @@ Development branch.
   operations (4,709 including nested), ~58s, 3 findings.** Two were audited and are real
   bugs (Alpha Animals renamed `AA_PseudoBaseMechanoid`, breaking a Rim of Madness - Bones
   patch and skipping 75 more operations; `ButcherCorpseRotten` no longer exists in 1.6).
-- 62 unit tests plus 2 network integration tests, all passing.
+- 79 unit tests plus 2 network integration tests, all passing.
 - Wheel built and installed into a clean venv from a clean path; `rimpatch --help` and a
   real check both work.
 - The composite action's shell step was executed locally in all four paths: clean (exit
   0), findings with `fail-on-findings: true` (exit 1, `findings=1`), findings with
   `fail-on-findings: false` (exit 0, `findings=1`), and a bad path (exit 2 with a
-  `::error::` message).
+  `::error::` message). Confirmed it does not pick up this machine's install.
+- Zero-argument run from inside a real Combat Extended checkout, using the clean-venv
+  wheel install: found the mod, found the install on the D: drive, `0 findings (2830
+  operations checked)` in 13s.
 
 ## Things learned the hard way, worth not re-discovering
 
@@ -94,5 +116,5 @@ Both are hard-walled to an agent and were not attempted, per LESSONS.md:
    release. That triggers sudo-mode TOTP, which an agent cannot pass. Later releases on
    an established listing pick up automatically.
 
-Update `[project.urls]` in `pyproject.toml` and the `uses: cbosch101/rimpatch@v1` line in
+Update `[project.urls]` in `pyproject.toml` and the `uses: Booyaka101/rimpatch@v1` line in
 the README if the repo lands under a different owner or name.

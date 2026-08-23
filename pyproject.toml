@@ -29,9 +29,10 @@ dependencies = ["lxml>=5.2.2", "click>=8.1"]
 dev = ["pytest>=8.0"]
 
 [project.urls]
-Homepage = "https://github.com/cbosch101/rimpatch"
-Repository = "https://github.com/cbosch101/rimpatch"
-Issues = "https://github.com/cbosch101/rimpatch/issues"
+Homepage = "https://github.com/Booyaka101/rimpatch"
+Repository = "https://github.com/Booyaka101/rimpatch"
+Issues = "https://github.com/Booyaka101/rimpatch/issues"
+Changelog = "https://github.com/Booyaka101/rimpatch/blob/main/CHANGELOG.md"
 
 [project.scripts]
 rimpatch = "rimpatch.cli:main"

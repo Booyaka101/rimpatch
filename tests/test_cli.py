@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import re
+from pathlib import Path
 
 from click.testing import CliRunner
 
@@ -125,3 +126,83 @@ def test_version_flag():
     result = invoke("--version")
     assert result.exit_code == 0
     assert __version__ in result.output
+
+
+def test_running_inside_a_mod_folder_needs_no_arguments(fixtures, monkeypatch):
+    monkeypatch.chdir(fixtures / "sequence")
+    result = invoke("check")
+    assert result.exit_code == 1
+    assert "checking the current folder as a mod" in result.output
+    assert "1 finding in 1 file" in result.output
+
+
+def test_findings_with_no_vanilla_say_so(fixtures):
+    result = invoke("check", "--mods", str(fixtures / "sequence"))
+    assert result.exit_code == 1
+    assert "No vanilla defs were loaded" in result.output
+    assert "--game" in result.output
+
+
+def fake_install(root: Path) -> Path:
+    """A minimal <game>/Data/Core, so --game can be tested without RimWorld installed."""
+    core = root / "Data" / "Core"
+    (core / "About").mkdir(parents=True)
+    (core / "About" / "About.xml").write_text(
+        "<ModMetaData><packageId>Ludeon.RimWorld</packageId><name>Core</name></ModMetaData>",
+        encoding="utf-8",
+    )
+    (core / "Defs").mkdir()
+    (core / "Defs" / "Stats.xml").write_text(
+        '<?xml version="1.0" encoding="utf-8"?>\n<Defs>\n  <StatDef>\n'
+        "    <defName>Flammability</defName>\n    <category>BasicsNonPawn</category>\n"
+        "  </StatDef>\n</Defs>\n",
+        encoding="utf-8",
+    )
+    (root / "Version.txt").write_text("1.6.4871 rev590\n", encoding="utf-8")
+    return root
+
+
+def test_game_flag_loads_core_and_resolves_the_patch(fixtures, tmp_path):
+    game = fake_install(tmp_path / "RimWorld")
+    result = invoke("check", "--game", str(game), "--mods", str(fixtures / "patcher"))
+    assert result.exit_code == 0, result.output
+    assert result.output.strip() == "0 findings (2 operations checked)"
+
+
+def test_the_hint_is_absent_once_vanilla_is_present(fixtures, tmp_path):
+    game = fake_install(tmp_path / "RimWorld")
+    result = invoke(
+        "check", "--game", str(game), "--mods", str(fixtures / "sequence")
+    )
+    assert result.exit_code == 1
+    assert "No vanilla defs were loaded" not in result.output
+
+
+def test_game_version_is_read_from_the_install(fixtures, tmp_path):
+    game = fake_install(tmp_path / "RimWorld")
+    result = invoke("mods", "--game", str(game), "--mods", str(fixtures / "patcher"))
+    assert "game version 1.6" in result.output
+
+
+def test_no_game_flag_is_accepted(fixtures):
+    result = invoke("check", "--no-game", "--mods", str(fixtures / "base"))
+    assert result.exit_code == 0
+
+
+def test_mods_config_auto_explains_itself_when_nothing_is_found(fixtures):
+    result = invoke(
+        "check", "--mods", str(fixtures / "base"), "--mods-config", "auto"
+    )
+    assert result.exit_code == 2
+    assert "could not find ModsConfig.xml" in result.output
+    assert "rimpatch where" in result.output
+
+
+def test_where_reports_what_it_can_and_cannot_find():
+    result = invoke("where")
+    assert result.exit_code == 0
+    assert "RimWorld install" in result.output
+    assert "ModsConfig.xml" in result.output
+    # Detection is off for tests, so it must fall back to listing where it looked.
+    assert "Looked for the install in:" in result.output
+    assert "RIMWORLD_DIR" in result.output

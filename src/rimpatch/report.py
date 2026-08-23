@@ -99,7 +99,20 @@ def _summary(report: Report, *, show_warnings: bool) -> str:
         extras.append(f"{_plural(len(report.missing_mods), 'active mod')} not found on disk")
     if extras:
         summary += ", " + ", ".join(extras)
-    return summary
+    hint = _hint(report)
+    return summary + hint if hint else summary
+
+
+def _hint(report: Report) -> str:
+    """The one mistake worth catching: checking a Core patch with no Core loaded."""
+    if report.vanilla_loaded or not report.findings:
+        return ""
+    if not any(finding.kind == "no-match" for finding in report.findings):
+        return ""
+    return (
+        "\n\nNo vanilla defs were loaded, so every patch targeting Core reports as"
+        " unresolved.\nPass --game <RimWorld install>, or --no-game to silence this."
+    )
 
 
 def _display_path(path: Path) -> str:
@@ -192,6 +205,7 @@ def _json(report: Report, *, show_warnings: bool) -> str:
             "elapsedSeconds": round(report.elapsed, 3),
             "mods": report.mods,
             "missingMods": report.missing_mods,
+            "vanillaLoaded": report.vanilla_loaded,
             "unevaluatedClasses": report.unknown_classes,
         },
     }

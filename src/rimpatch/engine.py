@@ -60,6 +60,7 @@ class Report:
     unknown_classes: dict[str, int] = field(default_factory=dict)
     mods: list[str] = field(default_factory=list)
     missing_mods: list[str] = field(default_factory=list)
+    vanilla_loaded: bool = True
     elapsed: float = 0.0
 
     @property
@@ -93,6 +94,7 @@ def check(
         gated_nodes=database.gated_nodes,
         mods=[mod.package_id for mod in order.mods],
         missing_mods=list(order.missing),
+        vanilla_loaded=any(mod.official for mod in order.mods),
     )
 
     for mod, failure in database.parse_errors:

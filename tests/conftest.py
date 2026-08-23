@@ -4,10 +4,17 @@ from pathlib import Path
 
 import pytest
 
+from rimpatch import locate
 from rimpatch.discover import expand_mod_paths, resolve_load_order
 from rimpatch.engine import Report, check
 
 FIXTURES = Path(__file__).parent / "fixtures"
+
+
+@pytest.fixture(autouse=True)
+def no_autodetect(monkeypatch):
+    """A test must never pick up whatever RimWorld happens to be on the machine."""
+    monkeypatch.setenv(locate.OFF_ENV, "1")
 
 
 @pytest.fixture

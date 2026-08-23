@@ -23,12 +23,25 @@ Python 3.11+. Pulls in `lxml` and `click`.
 
 ## Use it
 
-Point it at your mod and at your RimWorld install, which is where the vanilla defs come
-from. rimpatch never ships game data.
+Stand in your mod folder and run it. rimpatch treats the current folder as the mod and
+finds your RimWorld install on its own, including Steam libraries on other drives:
+
+```
+$ cd MyMod
+$ rimpatch check
+rimpatch: note: checking the current folder as a mod: D:\Mods\MyMod
+rimpatch: note: using the RimWorld install at D:\SteamLibrary\steamapps\common\RimWorld
+0 findings (2830 operations checked)
+```
+
+Vanilla defs are read from that install. rimpatch never ships game data. If detection
+guesses wrong or finds nothing, say where things are:
 
 ```
 rimpatch check --game "C:/Program Files (x86)/Steam/steamapps/common/RimWorld" --mods ./MyMod
 ```
+
+`rimpatch where` prints what it found, and when it finds nothing, every path it tried.
 
 In CI, where the game is not installed, check the checkout against sibling checkouts of
 the mods it declares in `About.xml`:
@@ -39,6 +52,29 @@ rimpatch check --repo .
 
 Exit code is 0 when clean, 1 when there are findings, 2 when rimpatch itself could not
 run (bad path, unreadable ModsConfig).
+
+### Commands and options
+
+| | |
+| --- | --- |
+| `rimpatch check` | Run the operations and report what misses |
+| `rimpatch mods` | Print the resolved load order and each mod's content folders |
+| `rimpatch where` | Show the install and `ModsConfig.xml` it can find |
+| `--game PATH` | RimWorld install root. Found automatically if omitted |
+| `--no-game` | Do not look for an install at all |
+| `--mods PATH` | A mod folder, or a folder of mod folders. Repeatable, order is load order |
+| `--repo PATH` | Check this checkout and resolve its `modDependencies` from sibling folders |
+| `--mods-config PATH` | Take the active list and order from a `ModsConfig.xml`, or `auto` to find it |
+| `--no-auto-order` | Use the order given instead of the mods' declared rules |
+| `--game-version 1.6` | Version used for `LoadFolders` and version subfolders |
+| `--format text\|json\|github` | Output format |
+| `--strict` | Also report operations whose `<success>` mode hides the failure |
+| `--no-warnings` | Hide warnings |
+| `--exit-zero` | Always exit 0 |
+
+Environment: `RIMWORLD_DIR` and `RIMWORLD_CONFIG_DIR` point detection straight at an
+install or a Config folder. `RIMPATCH_NO_AUTODETECT=1` turns detection off entirely, so
+a run cannot depend on what happens to be installed. Set it in CI for reproducibility.
 
 ### The worked example
 
@@ -118,7 +154,7 @@ jobs:
           repository: CombatExtended-Continued/CombatExtended
           path: ../CombatExtended
 
-      - uses: cbosch101/rimpatch@v1
+      - uses: Booyaka101/rimpatch@v1
         with:
           repo: .
 ```
@@ -136,9 +172,9 @@ patch as siblings, or scope the action to a mod that only patches other mods.
 Which patches can resolve depends entirely on what loaded before them, so rimpatch takes
 load order seriously.
 
-- `--mods-config path/to/ModsConfig.xml` is the exact answer: the active list and order
-  the game itself will use. On Windows it lives in
-  `%USERPROFILE%/AppData/LocalLow/Ludeon Studios/RimWorld by Ludeon Studios/Config/`.
+- `--mods-config auto` is the exact answer: the active list and order the game itself
+  will use, found for you. Pass a path instead if you keep it somewhere unusual.
+  `rimpatch where` shows which one it picked.
 - Otherwise official content loads first, then your mods are ordered by what they
   declare: `modDependencies`, `loadAfter`, `loadBefore` and the `force*` variants.
   Anything the mods do not constrain keeps the order you gave. `--no-auto-order` turns

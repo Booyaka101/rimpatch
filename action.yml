@@ -77,6 +77,9 @@ runs:
       id: run
       shell: bash
       env:
+        # A CI result must not depend on whether the runner happens to have RimWorld
+        # installed; the `game` input is the only way vanilla defs get loaded here.
+        RIMPATCH_NO_AUTODETECT: "1"
         RIMPATCH_REPO: ${{ inputs.repo }}
         RIMPATCH_MODS: ${{ inputs.mods }}
         RIMPATCH_GAME: ${{ inputs.game }}
