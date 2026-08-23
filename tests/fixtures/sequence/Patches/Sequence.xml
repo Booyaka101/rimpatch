@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Patch>
+  <Operation Class="PatchOperationSequence">
+    <operations>
+      <li Class="PatchOperationAdd">
+        <xpath>Defs/StatDef[defName="Flammability"]</xpath>
+        <value>
+          <first>1</first>
+        </value>
+      </li>
+      <li Class="PatchOperationAdd">
+        <xpath>Defs/StatDef[defName="NoSuchStat"]</xpath>
+        <value>
+          <second>2</second>
+        </value>
+      </li>
+      <li Class="PatchOperationAdd">
+        <xpath>Defs/StatDef[defName="Flammability"]</xpath>
+        <value>
+          <third>3</third>
+        </value>
+      </li>
+    </operations>
+  </Operation>
+</Patch>

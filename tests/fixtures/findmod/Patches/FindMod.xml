@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Patch>
+  <Operation Class="PatchOperationFindMod">
+    <mods>
+      <li>Some Mod Nobody Has Installed</li>
+    </mods>
+    <match Class="PatchOperationAdd">
+      <xpath>Defs/StatDef[defName="Flammability"]</xpath>
+      <value>
+        <matched>yes</matched>
+      </value>
+    </match>
+    <nomatch Class="PatchOperationAdd">
+      <xpath>Defs/StatDef[defName="Flammability"]</xpath>
+      <value>
+        <fallback>yes</fallback>
+      </value>
+    </nomatch>
+  </Operation>
+
+  <Operation Class="PatchOperationFindMod">
+    <mods>
+      <li>Some Mod Nobody Has Installed</li>
+    </mods>
+    <match Class="PatchOperationAdd">
+      <xpath>Defs/StatDef[defName="NoSuchStat"]</xpath>
+      <value>
+        <matched>yes</matched>
+      </value>
+    </match>
+  </Operation>
+</Patch>

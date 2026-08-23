@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Patch>
+  <Operation Class="PatchOperationConditional">
+    <xpath>Defs/StatDef[defName="NoSuchStat"]</xpath>
+    <match Class="PatchOperationAdd">
+      <xpath>Defs/StatDef[defName="NoSuchStat"]</xpath>
+      <value>
+        <nope>1</nope>
+      </value>
+    </match>
+  </Operation>
+
+  <Operation Class="PatchOperationAdd" MayRequire="Nobody.HasThisMod">
+    <xpath>Defs/StatDef[defName="NoSuchStat"]</xpath>
+    <value>
+      <gated>1</gated>
+    </value>
+  </Operation>
+</Patch>

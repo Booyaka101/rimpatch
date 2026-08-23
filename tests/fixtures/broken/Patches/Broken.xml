@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Patch>
+  <Operation Class="PatchOperationAdd">
+    <xpath>Defs/StatDef[defName=</xpath>
+    <value>
+      <label>x</label>
+    </value>
+  </Operation>
+  <Operation Class="PatchOperationsequence">
+    <operations>
+      <li Class="PatchOperationAdd">
+        <xpath>Defs/StatDef[defName="SurvivesTheBadFile"]</xpath>
+        <value>
+          <label>x</label>
+        </value>
+      </li>
+    </operations>
+  </Operation>
+  <Operation Class="SomeMod.PatchOperationCustomThing">
+    <xpath>Defs/StatDef[defName="Whatever"]</xpath>
+  </Operation>
+</Patch>

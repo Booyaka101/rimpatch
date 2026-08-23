@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Defs>
+  <StatDef MayRequire="Nobody.HasThisMod">
+    <defName>GatedStat</defName>
+  </StatDef>
+  <StatDef MayRequireAnyOf="Nobody.HasThisMod,Example.Base">
+    <defName>AnyOfStat</defName>
+  </StatDef>
+</Defs>

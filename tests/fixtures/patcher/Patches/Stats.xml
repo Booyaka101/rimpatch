@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Patch>
+
+  <!-- ========== General ========== -->
+
+  <Operation Class="PatchOperationAdd">
+    <xpath>Defs/StatDef[defName="Flammability"]</xpath>
+    <value>
+      <workerClass>Example.StatWorker_Flammability</workerClass>
+    </value>
+  </Operation>
+
+  <Operation Class="PatchOperationReplace">
+    <xpath>Defs/StatDef[defName="Flammability"]/category</xpath>
+    <value>
+      <category>Basics</category>
+    </value>
+  </Operation>
+
+</Patch>

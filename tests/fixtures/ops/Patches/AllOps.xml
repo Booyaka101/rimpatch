@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Patch>
+  <Operation Class="PatchOperationInsert">
+    <xpath>Defs/StatDef[defName="Flammability"]/category</xpath>
+    <value>
+      <inserted>1</inserted>
+    </value>
+  </Operation>
+  <Operation Class="PatchOperationRemove">
+    <xpath>Defs/StatDef[defName="Flammability"]/label</xpath>
+  </Operation>
+  <Operation Class="PatchOperationAttributeAdd">
+    <xpath>Defs/StatDef[defName="Flammability"]</xpath>
+    <attribute>Name</attribute>
+    <value>FlammabilityBase</value>
+  </Operation>
+  <Operation Class="PatchOperationAttributeSet">
+    <xpath>Defs/ThingDef[@Name="BaseGun"]</xpath>
+    <attribute>Abstract</attribute>
+    <value>True</value>
+  </Operation>
+  <Operation Class="PatchOperationAttributeRemove">
+    <xpath>Defs/ThingDef[defName="Gun_Revolver"]</xpath>
+    <attribute>ParentName</attribute>
+  </Operation>
+  <Operation Class="PatchOperationAddModExtension">
+    <xpath>Defs/ThingDef[defName="Gun_Revolver"]</xpath>
+    <value>
+      <li Class="Example.SomeExtension">
+        <flag>true</flag>
+      </li>
+    </value>
+  </Operation>
+  <Operation Class="PatchOperationSetName">
+    <xpath>Defs/StatDef[defName="Flammability"]/category</xpath>
+    <name>renamedCategory</name>
+  </Operation>
+  <Operation Class="PatchOperationTest">
+    <xpath>Defs/ThingDef[@Name="BaseGun"]/statBases/Mass</xpath>
+  </Operation>
+</Patch>

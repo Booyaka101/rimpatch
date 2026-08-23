@@ -1,0 +1,48 @@
+[build-system]
+requires = ["hatchling>=1.24"]
+build-backend = "hatchling.build"
+
+[project]
+name = "rimpatch"
+version = "1.0.0"
+description = "Find RimWorld PatchOperations that no longer resolve, without launching the game."
+readme = "README.md"
+license = { text = "MIT" }
+requires-python = ">=3.11"
+authors = [{ name = "Christiaan Bosch", email = "cbosch101@gmail.com" }]
+keywords = ["rimworld", "modding", "xml", "xpath", "patchoperation", "linter", "ci"]
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Environment :: Console",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Games/Entertainment",
+    "Topic :: Software Development :: Quality Assurance",
+    "Topic :: Text Processing :: Markup :: XML",
+]
+dependencies = ["lxml>=5.2.2", "click>=8.1"]
+
+[project.optional-dependencies]
+dev = ["pytest>=8.0"]
+
+[project.urls]
+Homepage = "https://github.com/cbosch101/rimpatch"
+Repository = "https://github.com/cbosch101/rimpatch"
+Issues = "https://github.com/cbosch101/rimpatch/issues"
+
+[project.scripts]
+rimpatch = "rimpatch.cli:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/rimpatch"]
+
+[tool.hatch.build.targets.sdist]
+include = ["src", "tests", "action.yml", "README.md", "LICENSE"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"
+markers = ["integration: hits the network to check a real published mod corpus"]

@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Defs>
+
+  <StatDef>
+    <defName>Flammability</defName>
+    <label>flammability</label>
+    <category>BasicsNonPawn</category>
+  </StatDef>
+
+  <ThingDef Name="BaseGun" Abstract="True">
+    <statBases>
+      <Mass>3</Mass>
+    </statBases>
+  </ThingDef>
+
+  <ThingDef ParentName="BaseGun">
+    <defName>Gun_Revolver</defName>
+    <label>revolver</label>
+  </ThingDef>
+
+</Defs>

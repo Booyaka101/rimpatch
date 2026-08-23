@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Patch>
+  <Operation Class="PatchOperationAdd" MayRequire="Nobody.HasThisMod">
+    <xpath>Defs/StatDef[defName="GatedStat"]</xpath>
+    <value>
+      <label>gated</label>
+    </value>
+  </Operation>
+  <Operation Class="PatchOperationAdd">
+    <xpath>Defs/StatDef[defName="AnyOfStat"]</xpath>
+    <value>
+      <label>kept</label>
+    </value>
+  </Operation>
+</Patch>
