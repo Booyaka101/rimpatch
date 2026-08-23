@@ -60,6 +60,8 @@ class Report:
     unknown_classes: dict[str, int] = field(default_factory=dict)
     mods: list[str] = field(default_factory=list)
     missing_mods: list[str] = field(default_factory=list)
+    baselined: list[Finding] = field(default_factory=list)
+    stale_baseline: int = 0
     vanilla_loaded: bool = True
     elapsed: float = 0.0
 

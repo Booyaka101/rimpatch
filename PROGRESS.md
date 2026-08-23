@@ -68,7 +68,7 @@ Development branch.
   operations (4,709 including nested), ~58s, 3 findings.** Two were audited and are real
   bugs (Alpha Animals renamed `AA_PseudoBaseMechanoid`, breaking a Rim of Madness - Bones
   patch and skipping 75 more operations; `ButcherCorpseRotten` no longer exists in 1.6).
-- 79 unit tests plus 2 network integration tests, all passing.
+- 88 unit tests plus 2 network integration tests, all passing on Windows and Linux.
 - Wheel built and installed into a clean venv from a clean path; `rimpatch --help` and a
   real check both work.
 - The composite action's shell step was executed locally in all four paths: clean (exit
@@ -84,6 +84,17 @@ Development branch.
   Flammability finding at `Patches/Core/Stats/Stats.xml:6` word for word. Both the wheel
   and the sdist install cleanly there, and `rimpatch where` degrades gracefully when
   there is no Steam to find.
+
+## Adoption
+
+A mod with existing breakage could not turn this on without going red forever, and a
+permanently red check gets deleted rather than fixed. `--write-baseline` records what is
+already broken, `--baseline` reports only what is new, and the action takes the same file
+via its `baseline` input. Verified on real data with Combat Extended: 1401 findings, 1368
+baseline entries, green afterwards, a newly added broken patch still fails the run, and
+fixing a baselined one reports `2 baseline entries no longer needed`. Entries are matched
+on mod, file, class and xpath and deliberately not on line number, so adding a comment
+above an operation does not silently un-baseline everything below it.
 
 ## Things learned the hard way, worth not re-discovering
 
@@ -111,6 +122,9 @@ Development branch.
    synthetic rule, and cycles now force the earliest unplaced mod instead of giving up.
 7. **An empty `<operations>` list is silent in-game**, a missing one throws. Only the
    second is a finding; the first is a warning.
+8. **A hint that tells you to pass the flag you just passed is noise.** The "no vanilla
+   defs were loaded" line kept firing under `--no-game`. It is now gated on the user not
+   having already opted out.
 
 ## Left for the owner
 

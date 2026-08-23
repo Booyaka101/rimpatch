@@ -32,7 +32,11 @@ First release.
 - `text`, `json` and `github` output formats. Exit 0 clean, 1 findings, 2 error.
 - Warnings for duplicate defNames, a patch root that is not `<Patch>`, an empty
   `<operations>` list and unreadable `About.xml`. Warnings never change the exit code.
-- A composite GitHub Action at the repo root with `findings` and `report` outputs.
+- `--write-baseline` and `--baseline`, so a mod with existing breakage can adopt this in
+  CI and only fail on what it breaks next. Entries are matched on mod, file, class and
+  xpath, never on line number. Entries that no longer occur are reported as unneeded.
+- A composite GitHub Action at the repo root with `findings` and `report` outputs, and a
+  `baseline` input.
 
 ### Notes
 

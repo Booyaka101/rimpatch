@@ -11,12 +11,19 @@ from .engine import Finding, Report
 FORMATS = ("text", "json", "github")
 
 
-def render(report: Report, fmt: str, *, show_warnings: bool = True, color: bool = False) -> str:
+def render(
+    report: Report,
+    fmt: str,
+    *,
+    show_warnings: bool = True,
+    color: bool = False,
+    show_hint: bool = True,
+) -> str:
     if fmt == "json":
         return _json(report, show_warnings=show_warnings)
     if fmt == "github":
-        return _github(report, show_warnings=show_warnings)
-    return _text(report, show_warnings=show_warnings, color=color)
+        return _github(report, show_warnings=show_warnings, show_hint=show_hint)
+    return _text(report, show_warnings=show_warnings, color=color, show_hint=show_hint)
 
 
 #: A single aborted sequence can skip dozens of children; the full list stays in JSON.
@@ -34,7 +41,7 @@ def _skipped_line(skipped: tuple[tuple[str, int], ...]) -> str:
     return f"skipped as a result: {shown}"
 
 
-def _text(report: Report, *, show_warnings: bool, color: bool) -> str:
+def _text(report: Report, *, show_warnings: bool, color: bool, show_hint: bool = True) -> str:
     bold = "\033[1m" if color else ""
     red = "\033[31m" if color else ""
     yellow = "\033[33m" if color else ""
@@ -73,11 +80,11 @@ def _text(report: Report, *, show_warnings: bool, color: bool) -> str:
             lines.append(f"  mod: {warning.mod}")
             lines.append("")
 
-    lines.append(_summary(report, show_warnings=show_warnings))
+    lines.append(_summary(report, show_warnings=show_warnings, show_hint=show_hint))
     return "\n".join(lines)
 
 
-def _summary(report: Report, *, show_warnings: bool) -> str:
+def _summary(report: Report, *, show_warnings: bool, show_hint: bool = True) -> str:
     checked = _plural(report.operations_checked, "operation")
     if not report.findings:
         summary = f"0 findings ({checked} checked)"
@@ -95,11 +102,17 @@ def _summary(report: Report, *, show_warnings: bool) -> str:
         extras.append(
             f"{_plural(total, 'operation')} from mod assemblies not evaluated"
         )
+    if report.baselined:
+        extras.append(f"{len(report.baselined)} accepted by the baseline")
+    if report.stale_baseline:
+        count = report.stale_baseline
+        noun = "baseline entry" if count == 1 else "baseline entries"
+        extras.append(f"{count} {noun} no longer needed")
     if report.missing_mods:
         extras.append(f"{_plural(len(report.missing_mods), 'active mod')} not found on disk")
     if extras:
         summary += ", " + ", ".join(extras)
-    hint = _hint(report)
+    hint = _hint(report) if show_hint else ""
     return summary + hint if hint else summary
 
 
@@ -145,11 +158,11 @@ def _annotation(finding: Finding, level: str) -> str:
     )
 
 
-def _github(report: Report, *, show_warnings: bool) -> str:
+def _github(report: Report, *, show_warnings: bool, show_hint: bool = True) -> str:
     lines = [_annotation(finding, "error") for finding in report.findings]
     if show_warnings:
         lines.extend(_annotation(warning, "warning") for warning in report.warnings)
-    lines.append(_summary(report, show_warnings=show_warnings))
+    lines.append(_summary(report, show_warnings=show_warnings, show_hint=show_hint))
     return "\n".join(lines)
 
 
@@ -204,6 +217,8 @@ def _json(report: Report, *, show_warnings: bool) -> str:
             "nodesGatedByMayRequire": report.gated_nodes,
             "elapsedSeconds": round(report.elapsed, 3),
             "mods": report.mods,
+            "baselined": len(report.baselined),
+            "staleBaselineEntries": report.stale_baseline,
             "missingMods": report.missing_mods,
             "vanillaLoaded": report.vanilla_loaded,
             "unevaluatedClasses": report.unknown_classes,

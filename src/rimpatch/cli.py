@@ -8,6 +8,7 @@ from pathlib import Path
 import click
 
 from . import __version__, locate
+from . import baseline as baselines
 from .discover import (
     LoadOrder,
     Mod,
@@ -197,6 +198,18 @@ def _build_load_order(
 )
 @click.option("--no-warnings", is_flag=True, help="Hide warnings such as duplicate defNames.")
 @click.option("--exit-zero", is_flag=True, help="Always exit 0, even when there are findings.")
+@click.option(
+    "--baseline",
+    type=click.Path(dir_okay=False, path_type=Path),
+    default=None,
+    help="Accept the findings recorded in this file, so only new ones are reported.",
+)
+@click.option(
+    "--write-baseline",
+    type=click.Path(dir_okay=False, path_type=Path),
+    default=None,
+    help="Write the current findings to this file and exit 0.",
+)
 def check(
     game: Path | None,
     no_game: bool,
@@ -209,6 +222,8 @@ def check(
     strict: bool,
     no_warnings: bool,
     exit_zero: bool,
+    baseline: Path | None,
+    write_baseline: Path | None,
 ) -> None:
     """Run every PatchOperation against the assembled Def tree and report what misses."""
     try:
@@ -216,6 +231,22 @@ def check(
             game, no_game, mod_paths, repo, mods_config, game_version, not no_auto_order
         )
         report = run_check(order, version, strict=strict, warnings=not no_warnings)
+
+        if write_baseline is not None:
+            written = baselines.write(write_baseline, report.findings)
+            for note in notes:
+                click.echo(f"rimpatch: note: {note}", err=True)
+            click.echo(
+                f"wrote {written} finding(s) to {write_baseline}. "
+                "Commit it, then pass --baseline to report only what is new."
+            )
+            raise SystemExit(EXIT_OK)
+
+        if baseline is not None:
+            known = baselines.load(baseline)
+            report.findings, report.baselined, report.stale_baseline = baselines.apply(
+                report.findings, known
+            )
     except RimpatchError as exc:
         click.echo(f"rimpatch: {exc}", err=True)
         raise SystemExit(EXIT_ERROR) from exc
@@ -228,6 +259,7 @@ def check(
         fmt,
         show_warnings=not no_warnings,
         color=wants_color(fmt, sys.stdout.isatty()),
+        show_hint=not no_game,
     )
     click.echo(output)
     if exit_zero or report.ok:

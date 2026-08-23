@@ -71,6 +71,8 @@ run (bad path, unreadable ModsConfig).
 | `--strict` | Also report operations whose `<success>` mode hides the failure |
 | `--no-warnings` | Hide warnings |
 | `--exit-zero` | Always exit 0 |
+| `--baseline FILE` | Accept the findings recorded in FILE, report only new ones |
+| `--write-baseline FILE` | Record the current findings and exit 0 |
 
 Environment: `RIMWORLD_DIR` and `RIMWORLD_CONFIG_DIR` point detection straight at an
 install or a Config folder. `RIMPATCH_NO_AUTODETECT=1` turns detection off entirely, so
@@ -160,12 +162,43 @@ jobs:
 ```
 
 Inputs: `repo`, `mods` (one path per line), `game`, `mods-config`, `game-version`,
-`strict`, `warnings`, `fail-on-findings`, `version`, `python-version`.
+`baseline`, `strict`, `warnings`, `fail-on-findings`, `version`, `python-version`.
 Outputs: `findings` (count) and `report` (path to the JSON report).
 
 Without a RimWorld install on the runner, vanilla defs are absent, so operations
 targeting Core will legitimately report as unresolved. Either check out the mods you
 patch as siblings, or scope the action to a mod that only patches other mods.
+
+## Adopting it on a mod that is already broken
+
+A mod with a dozen stale patches would go red the day you add this, and a permanently
+red check gets deleted rather than fixed. Record what is already broken and CI will only
+fail on what you break next:
+
+```
+$ rimpatch check --write-baseline rimpatch-baseline.json
+wrote 12 finding(s) to rimpatch-baseline.json. Commit it, then pass --baseline to report only what is new.
+
+$ rimpatch check --baseline rimpatch-baseline.json
+0 findings (412 operations checked), 12 accepted by the baseline
+```
+
+Commit the file. From then on a new break comes through on its own:
+
+```
+$ rimpatch check --baseline rimpatch-baseline.json
+Patches/Guns.xml:14  PatchOperationAdd  matched 0 nodes
+  xpath: Defs/ThingDef[defName="Gun_Autopistol"]/statBases
+  ...
+1 finding in 1 file (413 operations checked, 0.4s), 12 accepted by the baseline
+```
+
+Fix one and rimpatch tells you the entry is dead: `2 baseline entries no longer needed`.
+Regenerate with `--write-baseline` to clear them. Entries are matched on mod, file,
+class and xpath but deliberately **not** on line number, so adding a comment above an
+operation does not silently un-baseline everything below it.
+
+The action takes the same file via the `baseline` input.
 
 ## Getting the load order right
 

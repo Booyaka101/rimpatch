@@ -26,6 +26,10 @@ inputs:
     description: Version used for LoadFolders and version subfolders, for example 1.6.
     required: false
     default: ""
+  baseline:
+    description: Baseline file of accepted findings, so only new ones fail the build.
+    required: false
+    default: ""
   strict:
     description: Also report operations whose success mode hides the failure.
     required: false
@@ -85,6 +89,7 @@ runs:
         RIMPATCH_GAME: ${{ inputs.game }}
         RIMPATCH_MODS_CONFIG: ${{ inputs.mods-config }}
         RIMPATCH_GAME_VERSION: ${{ inputs.game-version }}
+        RIMPATCH_BASELINE: ${{ inputs.baseline }}
         RIMPATCH_STRICT: ${{ inputs.strict }}
         RIMPATCH_WARNINGS: ${{ inputs.warnings }}
         RIMPATCH_FAIL: ${{ inputs.fail-on-findings }}
@@ -96,6 +101,7 @@ runs:
         if [ -n "$RIMPATCH_GAME" ]; then args+=(--game "$RIMPATCH_GAME"); fi
         if [ -n "$RIMPATCH_MODS_CONFIG" ]; then args+=(--mods-config "$RIMPATCH_MODS_CONFIG"); fi
         if [ -n "$RIMPATCH_GAME_VERSION" ]; then args+=(--game-version "$RIMPATCH_GAME_VERSION"); fi
+        if [ -n "$RIMPATCH_BASELINE" ]; then args+=(--baseline "$RIMPATCH_BASELINE"); fi
         if [ "$RIMPATCH_STRICT" = "true" ]; then args+=(--strict); fi
         if [ "$RIMPATCH_WARNINGS" = "false" ]; then args+=(--no-warnings); fi
 
