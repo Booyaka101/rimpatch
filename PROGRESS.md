@@ -78,6 +78,12 @@ Development branch.
 - Zero-argument run from inside a real Combat Extended checkout, using the clean-venv
   wheel install: found the mod, found the install on the D: drive, `0 findings (2830
   operations checked)` in 13s.
+- **Verified on real Linux, not just assumed.** All 79 unit tests pass under WSL Ubuntu
+  on Python 3.14, and the same Combat Extended run against the same install mounted at
+  `/mnt/d` gives byte-identical output: `0 findings (2830 operations checked)`, and the
+  Flammability finding at `Patches/Core/Stats/Stats.xml:6` word for word. Both the wheel
+  and the sdist install cleanly there, and `rimpatch where` degrades gracefully when
+  there is no Steam to find.
 
 ## Things learned the hard way, worth not re-discovering
 
