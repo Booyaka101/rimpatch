@@ -32,10 +32,6 @@ class Success(Enum):
         return cls.NORMAL
 
 
-# Deliberate outcomes: the author asked for a result that does not depend on the xpath.
-DELIBERATE = (Success.ALWAYS, Success.NEVER)
-
-
 @dataclass
 class Outcome:
     worker_ok: bool
@@ -156,9 +152,6 @@ class Operation:
     xpath: str = ""
     #: a note worth surfacing that is not an error the game would report
     advisory: str = ""
-
-    def label(self) -> str:
-        return self.class_name
 
     def apply(self, ctx: Context) -> Outcome:
         ctx.evaluated += 1

@@ -126,12 +126,42 @@ above an operation does not silently un-baseline everything below it.
    defs were loaded" line kept firing under `--no-game`. It is now gated on the user not
    having already opted out.
 
+## House rule review (2026-08-23)
+
+Run against the global rules, mechanically rather than by eye.
+
+- **Clone detection.** difflib over all 84 functions found four pairs above the 55% mark,
+  including a 100% literal duplicate of `_relative` in `defs.py` and `engine.py`. Extracted
+  `xmlutil.display_path` (used by both plus `report.py`, which was the same mechanism with
+  a different base) and `locate._first_confirmed` (shared by `find_game` and
+  `find_mods_config`, previously 61% alike). Re-run: **0 pairs above 55%**.
+- **Proof of no behaviour change**, as the rule requires rather than an argument for it:
+  14 scenarios captured before the refactor (text/json/github, parse errors, sequences,
+  duplicates, strict, mods, where, the real Combat Extended run, both error paths), stdout
+  plus stderr plus exit code, 42 files, 450 KB. After the refactor and again after the
+  dead-code removal: **byte identical**, the only varying token being the elapsed-time
+  number, which is normalised out.
+- **Dead code removed**: `DELIBERATE`, `Operation.label()`, `Finding.title` and
+  `ParseFailure.column` were all defined and never read.
+- **Prose**: no em dashes, en dashes or smart quotes anywhere in the docs, code or the
+  commit messages.
+- **Comments**: 20 in roughly 2,000 lines, each stating a non-obvious constraint
+  (Harmony's loadBefore, MayRequire ordering, empty vs missing `<operations>`, the macOS
+  app bundle). No rationale essays, none addressed to a reviewer. One docstring runs to
+  six lines; the rest are shorter.
+- **Docs accuracy**: the README option table was diffed against real `--help` output.
+  No option or command documented that does not exist, and none missing.
+- **Shipping**: the branch was `master` while `pyproject.toml` pointed PyPI's Changelog
+  link at `blob/main/CHANGELOG.md` and CI only triggered on `main`, so the link would have
+  404'd and CI would never have run. Branch renamed to `main`.
+
 ## Left for the owner
 
 Both are hard-walled to an agent and were not attempted, per LESSONS.md:
 
-1. `python -m build && twine upload dist/*` to publish `rimpatch` 1.0.0 to PyPI. The
-   name is free as of 2026-08-23. Artifacts are already built in `dist/`.
+1. Push to GitHub and let CI go green on the exact commit before tagging, then
+   `twine upload dist/*` to publish `rimpatch` 1.0.0 to PyPI. The name is free as of
+   2026-08-23. Artifacts are already built in `dist/`.
 2. Push to GitHub and tick "Publish this Action to the GitHub Marketplace" on the v1.0.0
    release. That triggers sudo-mode TOTP, which an agent cannot pass. Later releases on
    an established listing pick up automatically.

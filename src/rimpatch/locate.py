@@ -153,17 +153,24 @@ def game_candidates() -> list[Path]:
     return candidates
 
 
-def find_game() -> Path | None:
-    """The first RimWorld install that actually has a Data folder, or None."""
+def _first_confirmed(candidates: list[Path], confirm) -> Path | None:
+    """First candidate `confirm` accepts. A candidate that cannot be read is skipped."""
     if autodetect_disabled():
         return None
-    for candidate in game_candidates():
+    for candidate in candidates:
         try:
-            if candidate.is_dir() and _looks_like_game(candidate):
+            if confirm(candidate):
                 return candidate
         except OSError:
             continue
     return None
+
+
+def find_game() -> Path | None:
+    """The first RimWorld install that actually has a Data folder, or None."""
+    return _first_confirmed(
+        game_candidates(), lambda path: path.is_dir() and _looks_like_game(path)
+    )
 
 
 def config_candidates() -> list[Path]:
@@ -207,16 +214,10 @@ def config_candidates() -> list[Path]:
 
 def find_mods_config() -> Path | None:
     """The player's ModsConfig.xml, or None."""
-    if autodetect_disabled():
-        return None
-    for folder in config_candidates():
-        candidate = folder / "ModsConfig.xml"
-        try:
-            if candidate.is_file():
-                return candidate
-        except OSError:
-            continue
-    return None
+    return _first_confirmed(
+        [folder / "ModsConfig.xml" for folder in config_candidates()],
+        lambda path: path.is_file(),
+    )
 
 
 __all__ = [

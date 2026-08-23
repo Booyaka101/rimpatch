@@ -20,7 +20,6 @@ _PARSER = etree.XMLParser(
 class ParseFailure:
     path: Path
     line: int
-    column: int
     message: str
 
 
@@ -39,9 +38,9 @@ def parse_file(path: Path) -> etree._Element:
 
 
 def parse_failure(path: Path, exc: etree.XMLSyntaxError) -> ParseFailure:
-    line, column = getattr(exc, "position", (0, 0))
+    line, _ = getattr(exc, "position", (0, 0))
     message = str(exc).split(", line ")[0]
-    return ParseFailure(path=path, line=line or 0, column=column or 0, message=message)
+    return ParseFailure(path=path, line=line or 0, message=message)
 
 
 def _split_ids(raw: str) -> list[str]:
@@ -98,6 +97,14 @@ def find_path(parent: Path, name: str) -> Path | None:
     except OSError:
         return None
     return None
+
+
+def display_path(path: Path, base: Path) -> str:
+    """`path` written relative to `base` with forward slashes, or absolute if unrelated."""
+    try:
+        return str(path.relative_to(base)).replace("\\", "/")
+    except ValueError:
+        return str(path).replace("\\", "/")
 
 
 def child_elements(element: etree._Element) -> list[etree._Element]:

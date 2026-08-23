@@ -7,6 +7,7 @@ import os
 from pathlib import Path
 
 from .engine import Finding, Report
+from .xmlutil import display_path
 
 FORMATS = ("text", "json", "github")
 
@@ -128,13 +129,6 @@ def _hint(report: Report) -> str:
     )
 
 
-def _display_path(path: Path) -> str:
-    try:
-        return str(path.relative_to(Path.cwd())).replace("\\", "/")
-    except ValueError:
-        return str(path).replace("\\", "/")
-
-
 def _escape(text: str) -> str:
     return text.replace("%", "%25").replace("\r", "%0D").replace("\n", "%0A")
 
@@ -153,7 +147,7 @@ def _annotation(finding: Finding, level: str) -> str:
     body = _escape("\n".join(parts))
     line = max(finding.line, 1)
     return (
-        f"::{level} file={_display_path(finding.path)},line={line},"
+        f"::{level} file={display_path(finding.path, Path.cwd())},line={line},"
         f"title={finding.op_class}::{body}"
     )
 

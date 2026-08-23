@@ -19,7 +19,13 @@ from .operations import (
     describe_chain,
     parse_operation,
 )
-from .xmlutil import apply_may_require, child_elements, parse_failure, parse_file
+from .xmlutil import (
+    apply_may_require,
+    child_elements,
+    display_path,
+    parse_failure,
+    parse_file,
+)
 
 ERROR = "error"
 WARNING = "warning"
@@ -41,10 +47,6 @@ class Finding:
     skipped: tuple[tuple[str, int], ...] = ()
     suppressed_by: str = ""
     related: tuple[str, ...] = ()
-
-    @property
-    def title(self) -> str:
-        return self.op_class
 
 
 @dataclass
@@ -104,7 +106,7 @@ def check(
             Finding(
                 kind="parse-error",
                 severity=ERROR,
-                rel_path=_relative(failure.path, mod.path),
+                rel_path=display_path(failure.path, mod.path),
                 path=failure.path,
                 line=failure.line,
                 mod=mod.package_id,
@@ -141,7 +143,7 @@ def _check_patch_file(
     *,
     strict: bool,
 ) -> None:
-    rel_path = _relative(path, mod.path)
+    rel_path = display_path(path, mod.path)
     try:
         root = parse_file(path)
     except etree.XMLSyntaxError as exc:
@@ -343,13 +345,6 @@ def _add_warnings(order: LoadOrder, database: DefDatabase, report: Report) -> No
                     message=mod.about_problem,
                 )
             )
-
-
-def _relative(path: Path, base: Path) -> str:
-    try:
-        return str(path.relative_to(base)).replace("\\", "/")
-    except ValueError:
-        return str(path).replace("\\", "/")
 
 
 __all__ = ["Finding", "Report", "check", "ERROR", "WARNING"]

@@ -13,6 +13,7 @@ from .xmlutil import (
     ParseFailure,
     apply_may_require,
     child_elements,
+    display_path,
     find_path,
     parse_failure,
     parse_file,
@@ -110,7 +111,7 @@ def load_defs(mods: list[Mod], active: frozenset[str], version: str) -> DefDatab
                 continue
             except OSError as exc:
                 database.parse_errors.append(
-                    (mod, ParseFailure(path=path, line=0, column=0, message=str(exc)))
+                    (mod, ParseFailure(path=path, line=0, message=str(exc)))
                 )
                 continue
 
@@ -120,7 +121,7 @@ def load_defs(mods: list[Mod], active: frozenset[str], version: str) -> DefDatab
                 continue
             database.gated_nodes += removed
 
-            rel_path = _relative(path, mod.path)
+            rel_path = display_path(path, mod.path)
             for element in child_elements(file_root):
                 line = element.sourceline or 0
                 root.append(element)
@@ -136,13 +137,6 @@ def load_defs(mods: list[Mod], active: frozenset[str], version: str) -> DefDatab
                     abstract=(element.get("Abstract", "").lower() == "true"),
                 )
     return database
-
-
-def _relative(path: Path, base: Path) -> str:
-    try:
-        return str(path.relative_to(base)).replace("\\", "/")
-    except ValueError:
-        return str(path).replace("\\", "/")
 
 
 __all__ = ["DefDatabase", "DefSource", "DuplicateDef", "load_defs", "xml_files"]
