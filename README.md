@@ -290,13 +290,16 @@ The integration test pulls Combat Extended's live Patches tree from GitHub and a
 every operation in it parses and evaluates without raising. It skips itself if GitHub is
 unreachable.
 
-## First distribution step
+## Who this is for
 
-Post it in the [RimWorld modding Discord's](https://discord.gg/rimworld) `#mod-development`
-channel and on `/r/RimWorldMods`, replying to one of the open "Failed to find a node with
-the given xpath" issues with the exact finding rimpatch produces for it. The people
-filing those issues are the users; showing the tool naming the broken line beats
-describing it.
+Anyone who ships a RimWorld mod with a `Patches/` folder and keeps the source in git.
+There are roughly 500 repos tagged `rimworld-mod` on GitHub and about 53,000 XML files
+using `PatchOperationAdd`, so the thing it checks is everywhere, but the audience that can
+wire it into CI is the subset who version their mod rather than editing straight in the
+Workshop folder.
+
+It is not a mod manager and not a player-facing tool. If you do not write patches, it has
+nothing to tell you.
 
 ## License
 
