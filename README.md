@@ -1,5 +1,10 @@
 # rimpatch
 
+[![PyPI](https://img.shields.io/pypi/v/rimpatch)](https://pypi.org/project/rimpatch/)
+[![Python](https://img.shields.io/pypi/pyversions/rimpatch)](https://pypi.org/project/rimpatch/)
+[![CI](https://github.com/Booyaka101/rimpatch/actions/workflows/ci.yml/badge.svg)](https://github.com/Booyaka101/rimpatch/actions/workflows/ci.yml)
+[![License](https://img.shields.io/pypi/l/rimpatch)](LICENSE)
+
 Find RimWorld PatchOperations that no longer resolve, without launching the game.
 
 RimWorld applies your `Patches/**/*.xml` to the combined Def tree at load time. When a

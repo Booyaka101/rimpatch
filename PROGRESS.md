@@ -1,8 +1,14 @@
 # rimpatch - build state
 
-**Status: v1.0.0 complete and verified end to end. Nothing outstanding in the build.**
-The only remaining steps are the owner's to take: publish to PyPI and list the action on
-the GitHub Marketplace.
+**Status: v1.0.0 SHIPPED on 2026-08-23.**
+
+- Source: https://github.com/Booyaka101/rimpatch
+- Release: https://github.com/Booyaka101/rimpatch/releases/tag/v1.0.0
+- PyPI: https://pypi.org/project/rimpatch/1.0.0/ (`pip install rimpatch`)
+- Action: `uses: Booyaka101/rimpatch@v1`
+
+One step is left and it cannot be automated: listing the action on the GitHub Marketplace.
+See "Left for the owner" at the bottom.
 
 ## Phase 0 verification (2026-08-23)
 
@@ -155,16 +161,30 @@ Run against the global rules, mechanically rather than by eye.
   link at `blob/main/CHANGELOG.md` and CI only triggered on `main`, so the link would have
   404'd and CI would never have run. Branch renamed to `main`.
 
+## Shipping record (2026-08-23)
+
+1. Repo created public at `Booyaka101/rimpatch`, `main` pushed at `3f325fd`.
+2. Waited for CI on that exact commit via the check-runs API, per the house rule.
+   **11/11 green**, including macOS 3.11/3.12/3.13, which settled the one platform that
+   could not be verified locally.
+3. Tagged `v1.0.0` and the moving major tag `v1`, both on `3f325fd`.
+4. GitHub release published with the wheel and sdist attached.
+5. `twine upload` to PyPI. Verified afterwards by `pip install rimpatch` from the index
+   into a clean venv and running a real check: `0 findings (2830 operations checked)`.
+6. Added a `published.yml` workflow that consumes the released `@v1` tag and
+   `pip install rimpatch==1.0.0` on Linux, Windows and macOS, so a broken published
+   artifact surfaces in CI rather than in someone's issue tracker. Runs weekly.
+
 ## Left for the owner
 
-Both are hard-walled to an agent and were not attempted, per LESSONS.md:
+**List the action on the GitHub Marketplace.** This is the one step an agent cannot do.
+Open the v1.0.0 release, click Edit, tick "Publish this Action to the GitHub Marketplace",
+accept the terms and click Update release. That POST is intercepted by GitHub's sudo mode,
+a full-page TOTP prompt, which needs your authenticator. `action.yml` already satisfies
+every validation the page enforces: name `rimpatch`, description 81 characters (the limit
+is 125), icon `crosshair`, colour `orange`.
 
-1. Push to GitHub and let CI go green on the exact commit before tagging, then
-   `twine upload dist/*` to publish `rimpatch` 1.0.0 to PyPI. The name is free as of
-   2026-08-23. Artifacts are already built in `dist/`.
-2. Push to GitHub and tick "Publish this Action to the GitHub Marketplace" on the v1.0.0
-   release. That triggers sudo-mode TOTP, which an agent cannot pass. Later releases on
-   an established listing pick up automatically.
+Once the listing exists, later releases pick it up automatically with no UI step.
 
-Update `[project.urls]` in `pyproject.toml` and the `uses: Booyaka101/rimpatch@v1` line in
-the README if the repo lands under a different owner or name.
+Edit `[project.urls]` in `pyproject.toml` and the `uses: Booyaka101/rimpatch@v1` line in
+the README if the repo ever moves.
