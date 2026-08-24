@@ -74,7 +74,7 @@ Development branch.
 - **242-mod load order: 46,097 defs, 6,846 def files, 1,158 patch files, 2,462 top-level
   operations (4,709 including nested), ~58s, 3 findings.** Two were audited and are real
   bugs (Alpha Animals renamed `AA_PseudoBaseMechanoid`, breaking a Rim of Madness - Bones
-  patch and skipping 75 more operations; `ButcherCorpseRotten` no longer exists in 1.6).
+  patch and skipping 76 more operations; `ButcherCorpseRotten` no longer exists in 1.6).
 - 88 unit tests plus 2 network integration tests, all passing on Windows and Linux.
 - Wheel built and installed into a clean venv from a clean path; `rimpatch --help` and a
   real check both work.
@@ -189,3 +189,35 @@ Later releases pick up the listing automatically with no UI step.
 
 Edit `[project.urls]` in `pyproject.toml` and the `uses: Booyaka101/rimpatch@v1` line in
 the README if the repo ever moves.
+
+## 1.1.0 (2026-08-24): the load order bug that was inventing findings
+
+Re-ran the tool against this machine's install while checking whether some findings were
+real, and found two defects.
+
+**Mods outside ModsConfig were never ordered.** `resolve_load_order` only applied
+`order_by_declared_rules` on the branch where no `ModsConfig.xml` was given. With one
+supplied, everything not in its `<activeMods>` was appended in raw discovery order. So
+`--mods-config auto --mods <folder of every installed mod>` put Pawnmorpher at position
+44 and Humanoid Alien Races, which Pawnmorpher declares `loadAfter` and `modDependencies`
+on, at 238. HAR is what puts `<alienRace>` on the Human ThingDef, so 8 Pawnmorpher
+operations reported as unresolved. Measured before and after on the same 2,462 operations:
+**10 findings became 2**, and the 2 that remain are the audited Rim of Madness - Bones
+breakages. Nothing else in the run changed.
+
+That is the worst category of bug for this tool. Every one of those 8 was a confident,
+precisely-located finding about a mod that had nothing wrong with it.
+
+**Nothing said a declared dependency was absent.** The `--repo` path warned about
+unresolved sibling dependencies; the `--mods` path did not. Now warned, but only for mods
+that also have operations matching nothing, so it explains findings rather than linting
+metadata. A mod may legitimately declare a dependency its patches do not need, and the
+`patcher` fixture does exactly that, which is what caught the first, noisier version of
+this. When no vanilla defs are loaded at all the existing missing-Core hint wins, since
+naming a dependency on top of that points people the wrong way.
+
+Also added a note listing mods checked despite not being active, which is what made the
+original run so easy to misread as "your load order has 10 problems".
+
+101 tests pass, up from 88. The difflib clone check over `src/` reports zero pairs above
+60%; the closest neighbour of the new `unsatisfied_dependencies` is 15%.

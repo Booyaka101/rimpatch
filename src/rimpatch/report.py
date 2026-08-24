@@ -118,14 +118,27 @@ def _summary(report: Report, *, show_warnings: bool, show_hint: bool = True) -> 
 
 
 def _hint(report: Report) -> str:
-    """The one mistake worth catching: checking a Core patch with no Core loaded."""
-    if report.vanilla_loaded or not report.findings:
+    """Explain findings that are an artifact of the load order rather than a mod bug."""
+    unresolved = [finding for finding in report.findings if finding.kind == "no-match"]
+    if not unresolved:
         return ""
-    if not any(finding.kind == "no-match" for finding in report.findings):
+    if not report.vanilla_loaded:
+        return (
+            "\n\nNo vanilla defs were loaded, so every patch targeting Core reports as"
+            " unresolved.\nPass --game <RimWorld install>, or --no-game to silence this."
+        )
+    # A mod missing a declared dependency patches a tree without whatever that dependency
+    # adds, so its findings say more about the load order than about the mod.
+    starved = sorted({finding.mod for finding in unresolved} & set(report.starved_mods))
+    if not starved:
         return ""
+    affected = sum(1 for finding in unresolved if finding.mod in set(starved))
     return (
-        "\n\nNo vanilla defs were loaded, so every patch targeting Core reports as"
-        " unresolved.\nPass --game <RimWorld install>, or --no-game to silence this."
+        f"\n\n{_plural(affected, 'finding')} come from "
+        + ", ".join(starved[:3])
+        + ("..." if len(starved) > 3 else "")
+        + ", which declare a dependency that is not loaded.\nAdd the dependency, or"
+        " exclude the mod, before treating those as real."
     )
 
 
@@ -214,6 +227,7 @@ def _json(report: Report, *, show_warnings: bool) -> str:
             "baselined": len(report.baselined),
             "staleBaselineEntries": report.stale_baseline,
             "missingMods": report.missing_mods,
+            "starvedMods": report.starved_mods,
             "vanillaLoaded": report.vanilla_loaded,
             "unevaluatedClasses": report.unknown_classes,
         },

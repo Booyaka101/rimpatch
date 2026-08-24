@@ -138,3 +138,47 @@ def test_version_folder_is_preferred_when_there_is_no_loadfolders(tmp_path):
     (root / "Common").mkdir()
     folders = read_mod(root).content_folders(frozenset(), "1.6")
     assert [path.name for path in folders] == ["versioned", "Common", "1.6"]
+
+
+def test_declared_dependency_absent_from_the_order_is_recorded():
+    order = resolve_load_order([mod("b.later", deps=["a.earlier"])], None)
+    assert order.unsatisfied == [("b.later", "a.earlier")]
+
+    both = resolve_load_order([mod("b.later", deps=["a.earlier"]), mod("a.earlier")], None)
+    assert both.unsatisfied == []
+
+
+def test_a_dependency_declared_twice_is_reported_once():
+    # modDependencies and modDependenciesByVersion routinely name the same mod.
+    order = resolve_load_order([mod("b.later", deps=["a.earlier", "a.earlier"])], None)
+    assert order.unsatisfied == [("b.later", "a.earlier")]
+
+
+def test_dependency_matching_ignores_packageid_case():
+    mods = [mod("b.later", deps=["Erdelf.HumanoidAlienRaces"]), mod("erdelf.humanoidalienraces")]
+    assert resolve_load_order(mods, None).unsatisfied == []
+
+
+def test_mods_outside_modsconfig_are_recorded_as_inactive():
+    order = resolve_load_order([mod("a.one"), mod("b.two")], ["a.one"])
+    assert order.inactive == ["b.two"]
+    assert [item.package_id for item in order.mods] == ["a.one", "b.two"]
+
+
+def test_mods_outside_modsconfig_are_still_ordered_by_their_own_rules():
+    """ModsConfig fixes the order for what it lists; the rest still have declared rules."""
+    mods = [mod("z.dependent", after=["a.provider"]), mod("a.provider"), mod("in.config")]
+    order = resolve_load_order(mods, ["in.config"])
+    assert ids(order.mods) == ["in.config", "a.provider", "z.dependent"]
+
+
+def test_modsconfig_positions_are_not_reshuffled_by_declared_rules():
+    mods = [mod("first.one"), mod("second.two", before=["first.one"])]
+    order = resolve_load_order(mods, ["first.one", "second.two"])
+    assert ids(order.mods) == ["first.one", "second.two"]
+
+
+def test_no_auto_order_leaves_the_extras_alone():
+    mods = [mod("z.dependent", after=["a.provider"]), mod("a.provider")]
+    order = resolve_load_order(mods, ["nothing.here"], auto_order=False)
+    assert ids(order.mods) == ["z.dependent", "a.provider"]

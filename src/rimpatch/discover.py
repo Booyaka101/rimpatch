@@ -287,10 +287,34 @@ class LoadOrder:
     missing: list[str] = field(default_factory=list)
     duplicates: list[str] = field(default_factory=list)
     cyclic: list[str] = field(default_factory=list)
+    unsatisfied: list[tuple[str, str]] = field(default_factory=list)
+    # Checked even though ModsConfig does not list them as active.
+    inactive: list[str] = field(default_factory=list)
 
     @property
     def active_ids(self) -> frozenset[str]:
         return frozenset(mod.key for mod in self.mods)
+
+
+def unsatisfied_dependencies(mods: list[Mod]) -> list[tuple[str, str]]:
+    """Declared modDependencies that are absent from the order, as (mod, dependency).
+
+    A mod whose hard dependency is missing patches a def tree that is missing whatever
+    that dependency contributes, so its operations report as unresolved even though
+    nothing about the mod is wrong. Naming the dependency is the difference between a
+    finding someone can act on and one that makes the tool look broken.
+    """
+    present = {mod.key for mod in mods}
+    gaps = []
+    for mod in mods:
+        seen: set[str] = set()
+        for dependency in mod.dependencies:
+            key = normalise_package_id(dependency.package_id)
+            if key in present or key in seen:
+                continue
+            seen.add(key)
+            gaps.append((mod.package_id, dependency.display_name or dependency.package_id))
+    return gaps
 
 
 def order_by_declared_rules(mods: list[Mod]) -> tuple[list[Mod], list[str]]:
@@ -368,15 +392,19 @@ def resolve_load_order(
             continue
         by_key[mod.key] = mod
 
+    def finish(order: LoadOrder) -> LoadOrder:
+        order.unsatisfied = unsatisfied_dependencies(order.mods)
+        return order
+
     if active is None:
         deduped = list(by_key.values())
         official = [mod for mod in deduped if mod.official]
         rest = [mod for mod in deduped if not mod.official]
         seeded = official + rest
         if not auto_order:
-            return LoadOrder(mods=seeded, duplicates=duplicates)
+            return finish(LoadOrder(mods=seeded, duplicates=duplicates))
         ordered, cyclic = order_by_declared_rules(seeded)
-        return LoadOrder(mods=ordered, duplicates=duplicates, cyclic=cyclic)
+        return finish(LoadOrder(mods=ordered, duplicates=duplicates, cyclic=cyclic))
 
     ordered = []
     missing = []
@@ -388,8 +416,24 @@ def resolve_load_order(
             ordered.append(mod)
     # Mods handed to us on the command line but absent from ModsConfig still get checked;
     # dropping them silently would make `rimpatch check --mods ./MyMod` report nothing.
-    ordered.extend(by_key.values())
-    return LoadOrder(mods=ordered, missing=missing, duplicates=duplicates)
+    # ModsConfig is the real order for the mods it lists, so those keep their positions,
+    # but the rest arrive in whatever order the disk gave us. Leaving that alone puts a
+    # mod ahead of the dependency it declares it loads after, and every patch that needed
+    # what the dependency contributes then reports as unresolved.
+    extra = list(by_key.values())
+    cyclic: list[str] = []
+    if auto_order and extra:
+        extra, cyclic = order_by_declared_rules(extra)
+    ordered.extend(extra)
+    return finish(
+        LoadOrder(
+            mods=ordered,
+            missing=missing,
+            duplicates=duplicates,
+            cyclic=cyclic,
+            inactive=[mod.package_id for mod in extra],
+        )
+    )
 
 
 def find_sibling_dependencies(repo: Path, mod: Mod, already: set[str]) -> tuple[list[Mod], list[str]]:
@@ -452,4 +496,5 @@ __all__ = [
     "read_mod",
     "read_mods_config",
     "resolve_load_order",
+    "unsatisfied_dependencies",
 ]
