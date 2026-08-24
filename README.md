@@ -118,7 +118,7 @@ Those 2,830 operations are Combat Extended's real Patches tree against a real Ri
 ### What a real break looks like
 
 From a 242-mod load order on a live install. Alpha Animals renamed a base def, so a
-patch in Rim of Madness - Bones lands nowhere and takes 75 later operations with it,
+patch in Rim of Madness - Bones lands nowhere and takes 76 later operations with it,
 because `PatchOperationSequence` stops at the first child that fails:
 
 ```
@@ -217,6 +217,12 @@ load order seriously.
   declare: `modDependencies`, `loadAfter`, `loadBefore` and the `force*` variants.
   Anything the mods do not constrain keeps the order you gave. `--no-auto-order` turns
   this off and uses your order verbatim.
+- Mods you pass that are not in the `ModsConfig.xml` you gave are still checked, and are
+  still ordered by those declared rules. They are listed in a note so it is clear they
+  are not part of the active list.
+- If a mod declares a `modDependencies` entry that is not loaded at all, and that mod has
+  operations matching nothing, rimpatch says so. Those findings usually say more about
+  the load order than about the mod.
 - `rimpatch mods ...` prints the resolved order and each mod's content folders, which is
   the fastest way to see why something did or did not load.
 

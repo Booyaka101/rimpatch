@@ -178,6 +178,15 @@ def _build_load_order(
             + ", ".join(order.cyclic[:5])
             + ("..." if len(order.cyclic) > 5 else "")
         )
+    # Pointing --mods at a folder of folders alongside a ModsConfig quietly checks every
+    # mod on disk, not the active list, which reads as "these are your load order's
+    # problems" when most of them are not even switched on.
+    if order.inactive:
+        shown = ", ".join(order.inactive[:3]) + ("..." if len(order.inactive) > 3 else "")
+        notes.append(
+            f"{len(order.inactive)} mod(s) are not active in ModsConfig but were checked "
+            f"anyway: {shown}"
+        )
     return order, version, notes
 
 

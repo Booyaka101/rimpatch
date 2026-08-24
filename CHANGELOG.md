@@ -3,6 +3,32 @@
 All notable changes to rimpatch are recorded here. This project follows
 [Semantic Versioning](https://semver.org/).
 
+## 1.1.0 - 2026-08-24
+
+### Fixed
+
+- Mods outside the given `ModsConfig.xml` were appended in whatever order the disk
+  returned, with none of their declared `loadAfter` or `modDependencies` rules applied.
+  A mod could land ahead of the dependency it says it loads after, and every patch that
+  needed what the dependency contributes then reported as unresolved. On a real 242-mod
+  run this was 8 of 10 findings: Pawnmorpher sat at position 44 with Humanoid Alien
+  Races, which it declares `loadAfter`, at 238. Those extras are now ordered by the same
+  declared rules already used when there is no `ModsConfig.xml`, and the run drops to
+  the 2 findings that are real.
+- The README undercounted the worked example by one. `PatchOperationSequence` takes 76
+  later operations with it, not 75.
+
+### Added
+
+- A warning naming a `modDependencies` entry that is not in the load order, raised only
+  for mods that also have operations matching nothing, so it explains findings rather
+  than linting metadata. With no vanilla defs loaded at all the existing missing-Core
+  hint takes precedence, because that is the real cause and naming a dependency on top
+  of it misleads.
+- A note listing mods that were checked despite not being active in the `ModsConfig.xml`
+  that was supplied.
+- `starvedMods` in the JSON summary.
+
 ## 1.0.0 - 2026-08-23
 
 First release.

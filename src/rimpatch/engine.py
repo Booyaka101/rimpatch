@@ -62,6 +62,8 @@ class Report:
     unknown_classes: dict[str, int] = field(default_factory=dict)
     mods: list[str] = field(default_factory=list)
     missing_mods: list[str] = field(default_factory=list)
+    # Mods in the order whose declared dependencies are not all present.
+    starved_mods: list[str] = field(default_factory=list)
     baselined: list[Finding] = field(default_factory=list)
     stale_baseline: int = 0
     vanilla_loaded: bool = True
@@ -99,6 +101,7 @@ def check(
         mods=[mod.package_id for mod in order.mods],
         missing_mods=list(order.missing),
         vanilla_loaded=any(mod.official for mod in order.mods),
+        starved_mods=sorted({package_id for package_id, _ in order.unsatisfied}),
     )
 
     for mod, failure in database.parse_errors:
@@ -345,6 +348,36 @@ def _add_warnings(order: LoadOrder, database: DefDatabase, report: Report) -> No
                     message=mod.about_problem,
                 )
             )
+
+    # Only worth saying when it explains something. A mod can declare a dependency it
+    # does not need for its patches to resolve, and warning about that is metadata
+    # linting rather than the job here.
+    # With no vanilla defs at all every patch misses, and the missing Core is the
+    # explanation; naming a dependency on top of that just sends people the wrong way.
+    if not report.vanilla_loaded:
+        return
+    by_id = {mod.package_id: mod for mod in order.mods}
+    unresolved_in = {finding.mod for finding in report.findings if finding.kind == "no-match"}
+    for package_id, dependency in order.unsatisfied:
+        mod = by_id.get(package_id)
+        if mod is None or package_id not in unresolved_in:
+            continue
+        report.warnings.append(
+            Finding(
+                kind="missing-dependency",
+                severity=WARNING,
+                rel_path="About/About.xml",
+                path=mod.path / "About" / "About.xml",
+                line=1,
+                mod=package_id,
+                op_class="About",
+                message=(
+                    f'declares a dependency on "{dependency}", which is not in the load '
+                    "order; patches in this mod can report as unresolved for that reason "
+                    "alone"
+                ),
+            )
+        )
 
 
 __all__ = ["Finding", "Report", "check", "ERROR", "WARNING"]

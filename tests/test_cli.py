@@ -206,3 +206,93 @@ def test_where_reports_what_it_can_and_cannot_find():
     # Detection is off for tests, so it must fall back to listing where it looked.
     assert "Looked for the install in:" in result.output
     assert "RIMWORLD_DIR" in result.output
+
+
+def starved_mod(root: Path, *, dependency: str = "Example.Missing") -> Path:
+    """A mod that declares a dependency and patches something that dependency would add."""
+    (root / "About").mkdir(parents=True)
+    (root / "About" / "About.xml").write_text(
+        '<?xml version="1.0" encoding="utf-8"?>\n<ModMetaData>'
+        "<packageId>Example.Starved</packageId><name>Example Starved</name>"
+        f"<modDependencies><li><packageId>{dependency}</packageId>"
+        f"<displayName>{dependency}</displayName></li></modDependencies>"
+        "</ModMetaData>",
+        encoding="utf-8",
+    )
+    (root / "Patches").mkdir()
+    (root / "Patches" / "Starved.xml").write_text(
+        '<?xml version="1.0" encoding="utf-8"?>\n<Patch>\n'
+        '  <Operation Class="PatchOperationAdd">\n'
+        '    <xpath>Defs/StatDef[defName="AddedByTheDependency"]</xpath>\n'
+        "    <value><workerClass>X</workerClass></value>\n"
+        "  </Operation>\n</Patch>\n",
+        encoding="utf-8",
+    )
+    return root
+
+
+def test_missing_dependency_is_named_next_to_the_findings_it_explains(fixtures, tmp_path):
+    game = fake_install(tmp_path / "RimWorld")
+    mod_dir = starved_mod(tmp_path / "Starved")
+    result = invoke("check", "--game", str(game), "--mods", str(mod_dir))
+    assert result.exit_code == 1
+    assert "Example.Missing" in result.output
+    assert "not in the load order" in result.output
+    assert "which declare a dependency that is not loaded" in result.output
+
+
+def test_no_dependency_warning_when_the_mods_patches_all_resolve(fixtures, tmp_path):
+    """Declaring a dependency you do not need for your patches is not rimpatch's business."""
+    game = fake_install(tmp_path / "RimWorld")
+    result = invoke("check", "--game", str(game), "--mods", str(fixtures / "patcher"))
+    assert result.exit_code == 0, result.output
+    assert "Example.Base" not in result.output
+    assert "dependency" not in result.output
+
+
+def test_missing_core_outranks_a_missing_dependency(tmp_path):
+    """With no vanilla at all, everything misses; blaming the dependency misleads."""
+    mod_dir = starved_mod(tmp_path / "Starved")
+    result = invoke("check", "--mods", str(mod_dir))
+    assert result.exit_code == 1
+    assert "No vanilla defs were loaded" in result.output
+    assert "Example.Missing" not in result.output
+
+
+def test_dependency_warning_goes_away_once_the_dependency_is_loaded(fixtures, tmp_path):
+    game = fake_install(tmp_path / "RimWorld")
+    mod_dir = starved_mod(tmp_path / "Starved", dependency="Example.Base")
+    result = invoke(
+        "check", "--game", str(game), "--mods", str(fixtures / "base"), "--mods", str(mod_dir)
+    )
+    assert "not in the load order" not in result.output
+    assert "which declare a dependency" not in result.output
+
+
+def test_json_reports_which_mods_are_missing_a_dependency(tmp_path):
+    game = fake_install(tmp_path / "RimWorld")
+    mod_dir = starved_mod(tmp_path / "Starved")
+    result = invoke("check", "--game", str(game), "--mods", str(mod_dir), "--format", "json")
+    payload = json.loads(result.output)
+    assert payload["summary"]["starvedMods"] == ["Example.Starved"]
+
+
+def test_mods_absent_from_modsconfig_are_called_out(fixtures, tmp_path):
+    config = tmp_path / "ModsConfig.xml"
+    config.write_text(
+        '<?xml version="1.0" encoding="utf-8"?>\n'
+        "<ModsConfigData><version>1.6.4871 rev590</version><activeMods>"
+        "<li>Example.Base</li></activeMods></ModsConfigData>\n",
+        encoding="utf-8",
+    )
+    result = invoke(
+        "check",
+        "--mods",
+        str(fixtures / "base"),
+        "--mods",
+        str(fixtures / "patcher"),
+        "--mods-config",
+        str(config),
+    )
+    assert "not active in ModsConfig but were checked anyway" in result.output
+    assert "Example.Patcher" in result.output

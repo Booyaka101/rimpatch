@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "rimpatch"
-version = "1.0.0"
+version = "1.1.0"
 description = "Find RimWorld PatchOperations that no longer resolve, without launching the game."
 readme = "README.md"
 license = { text = "MIT" }
